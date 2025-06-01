@@ -1,48 +1,92 @@
 <?php
+// app/Models/User.php
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable; // ✅ Sin HasApiTokens
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
+    protected $table = 'users';
+    protected $primaryKey = 'UserId';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public $timestamps = true;
+    const CREATED_AT = 'createdAt';
+    const UPDATED_AT = 'updatedAt';
+
     protected $fillable = [
-        'name',
+        'UserId',
+        'firstName',
+        'lastName',
         'email',
         'password',
+        'phoneNumber',
+        'MunicipalityId',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
+    protected $casts = [
+        'createdAt' => 'datetime',
+        'updatedAt' => 'datetime',
+        'email_verified_at' => 'datetime',
+    ];
+
+    // Sistema de roles BÁSICO
+    public function roles()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->belongsToMany(Role::class, 'role_user', 'UserId', 'RoleId');
+    }
+
+    public function hasRole($roleId)
+    {
+        return $this->roles()->where('RoleId', $roleId)->exists();
+    }
+
+    public function isAdmin()
+    {
+        return $this->hasRole('admin');
+    }
+
+    public function isManager()
+    {
+        return $this->hasRole('manager');
+    }
+
+    // Otros métodos útiles
+    public function getRouteKeyName()
+    {
+        return 'UserId';
+    }
+
+    public function getNameAttribute()
+    {
+        return "{$this->firstName} {$this->lastName}";
+    }
+
+    // Relaciones
+    public function municipality()
+    {
+        return $this->belongsTo(Municipality::class, 'MunicipalityId', 'MunId');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::creating(function ($model) {
+            if (empty($model->UserId)) {
+                $model->UserId = (string) Str::uuid();
+            }
+        });
     }
 }
