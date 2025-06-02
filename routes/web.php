@@ -30,6 +30,7 @@ use App\Http\Controllers\OrderDetailController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminStatsController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\GraficasController;
 
 // ==========================================
 // RUTAS PÚBLICAS
@@ -48,6 +49,7 @@ Route::prefix('shop')->name('shop.')->group(function () {
 
 // Rutas de contacto y email (PÚBLICAS)
 Route::get('/contact', [EmailController::class, 'showContactForm'])->name('contact');
+
 Route::post('/contact', [EmailController::class, 'sendContactEmail'])->name('contact.send');
 
 // Newsletter
@@ -124,10 +126,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/reviews', [ReviewController::class, 'store'])->name('reviews.store');
 
     // ==========================================
-    // RUTAS PARA TODOS LOS USUARIOS AUTENTICADOS (RECURSOS CRUD)
+    // RUTAS PARA TODOS LOS USUARIOS AUTENTICADOS (admin/manager)
     // ==========================================
 
-    // Estas rutas están disponibles para todos según tu lista de rutas
+   Route::middleware(['auth', 'role:admin|manager'])->group(function () {
     Route::resource('countries', CountryController::class);
     Route::resource('entities', EntityController::class);
     Route::resource('municipalities', MunicipalityController::class);
@@ -142,9 +144,20 @@ Route::middleware('auth')->group(function () {
     Route::resource('order-details', OrderDetailController::class);
     Route::resource('payments', PaymentController::class);
     Route::resource('addresses', AddressController::class);
-    Route::resource('reviews', ReviewController::class);
     Route::resource('users', UserController::class);
     Route::resource('roles', RoleController::class);
+
+Route::get('/ubicacion', function () {
+    $paises = \App\Models\Country::orderBy('Name')->get();
+    return view('ubicacion', compact('paises'));
+});
+
+    //graficas
+    Route::get('graficas', [GraficasController::class, 'index'])->name('graficas.index');
+    Route::get('graficas/barras', [GraficasController::class, 'barras'])->name('graficas.barras');
+    Route::get('graficas/pie', [GraficasController::class, 'pie'])->name('graficas.pie');
+    Route::get('graficas/columnas', [GraficasController::class, 'columnas'])->name('graficas.columnas');
+});
 
     // ==========================================
     // RUTAS PARA ADMIN ESPECÍFICAS
@@ -190,26 +203,37 @@ Route::middleware('auth')->group(function () {
     // RUTAS AJAX
     // ==========================================
 
-    Route::prefix('ajax')->name('ajax.')->group(function () {
-        // Gestión de productos con AJAX
-        Route::get('/products', [ProductAjaxController::class, 'index'])->name('products.index');
-        Route::get('/products/category/{categoryId}', [ProductAjaxController::class, 'buscarProductos'])->name('products.category');
-        Route::get('/products/provider/{providerId}', [ProductAjaxController::class, 'buscarProductosPorProveedor'])->name('products.provider');
-        Route::post('/products/{productId}/increment-stock/{categoryId}', [ProductAjaxController::class, 'incrementarStock'])->name('products.increment');
-        Route::post('/products/{productId}/decrement-stock/{categoryId}', [ProductAjaxController::class, 'decrementarStock'])->name('products.decrement');
-        Route::get('/products/{productId}/get', [ProductAjaxController::class, 'obtenerProducto'])->name('products.get');
-        Route::put('/products/{productId}/update', [ProductAjaxController::class, 'actualizarProducto'])->name('products.update');
+   Route::prefix('ajax')->name('ajax.')->group(function () {
+    // Selects dependientes
+    Route::get('/entities/{id_pais}', [AjaxController::class, 'cambia_combo']);
+    Route::get('/municipalities/{id_entidad}', [AjaxController::class, 'cambia_combo_2']);
+    Route::get('/buscar-municipios', [AjaxController::class, 'buscarMunicipios'])->name('buscar.municipios');
+    Route::get('/entity/{id}', [AjaxController::class, 'getEntidadDetalles'])->name('entity.detalles');
+    Route::get('/municipality/{id}', [AjaxController::class, 'getMunicipioDetalles'])->name('municipality.detalles');
 
-        // Gestión de ubicaciones con AJAX
-        Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
-        Route::get('/locations/entities/{countryId}', [LocationController::class, 'getEntities'])->name('locations.entities');
-        Route::get('/locations/municipalities/{entityId}', [LocationController::class, 'getMunicipalities'])->name('locations.municipalities');
-        Route::get('/locations/municipality/{municipalityId}', [LocationController::class, 'getMunicipalityDetails'])->name('locations.municipality.details');
-        Route::put('/locations/municipality/{municipalityId}/status', [LocationController::class, 'updateMunicipalityStatus'])->name('locations.municipality.status');
-        Route::get('/locations/dynamic-data', [LocationController::class, 'dynamicData'])->name('locations.dynamic');
-        Route::get('/locations/entity/{entityId}', [LocationController::class, 'getEntityDetails'])->name('locations.entity.details');
-        Route::put('/locations/entity/{entityId}/name', [LocationController::class, 'updateEntityName'])->name('locations.entity.name');
-    });
+    // Gestión productos AJAX
+    Route::get('/products', [ProductAjaxController::class, 'index'])->name('products.index');
+    Route::get('/products/category/{categoryId}', [ProductAjaxController::class, 'buscarProductos'])->name('products.category');
+    Route::get('/products/provider/{providerId}', [ProductAjaxController::class, 'buscarProductosPorProveedor'])->name('products.provider');
+    // Estas deben estar dentro del grupo '/ajax'
+Route::post('/products/{productId}/increment-stock/{categoryId}', [ProductAjaxController::class, 'incrementarStock'])->name('products.increment');
+Route::post('/products/{productId}/decrement-stock/{categoryId}', [ProductAjaxController::class, 'decrementarStock'])->name('products.decrement');
+
+
+    Route::get('/products/{productId}/get', [ProductAjaxController::class, 'obtenerProducto'])->name('products.get');
+    Route::put('/products/{productId}/update', [ProductAjaxController::class, 'actualizarProducto'])->name('products.update');
+
+    // Opcionales dinámicos de ubicación
+    Route::get('/locations', [LocationController::class, 'index'])->name('locations.index');
+    Route::get('/locations/entities/{countryId}', [LocationController::class, 'getEntities'])->name('locations.entities');
+    Route::get('/locations/municipalities/{entityId}', [LocationController::class, 'getMunicipalities'])->name('locations.municipalities');
+    Route::get('/locations/municipality/{municipalityId}', [LocationController::class, 'getMunicipalityDetails'])->name('locations.municipality.details');
+    Route::put('/locations/municipality/{municipalityId}/status', [LocationController::class, 'updateMunicipalityStatus'])->name('locations.municipality.status');
+    Route::get('/locations/dynamic-data', [LocationController::class, 'dynamicData'])->name('locations.dynamic');
+    Route::get('/locations/entity/{entityId}', [LocationController::class, 'getEntityDetails'])->name('locations.entity.details');
+    Route::put('/locations/entity/{entityId}/name', [LocationController::class, 'updateEntityName'])->name('locations.entity.name');
+});
+
 
     // ==========================================
     // RUTAS DE EMAIL GENERAL (PARA USUARIOS AUTENTICADOS)
@@ -229,11 +253,12 @@ Route::middleware('auth')->group(function () {
     // RUTAS DE PDF PARA REPORTES
     // ==========================================
 
-    Route::prefix('pdf')->name('pdf.')->group(function () {
-        Route::get('/', [PDFController::class, 'index'])->name('index');
-        Route::get('/products/{type}', [PDFController::class, 'productReport'])->name('products')->where('type', '[1-2]');
-        Route::get('/invoice/{type}/{orderId}', [PDFController::class, 'orderInvoice'])->name('invoice')->where(['type' => '[1-2]', 'orderId' => '[0-9]+']);
-    });
+   Route::get('/pdf', [PdfController::class, 'index'])->name('pdf.index');
+Route::get('/pdf/productos/{tipo}', [PdfController::class, 'reporteProductos'])->name('pdf.productos');
+Route::get('/pdf/stock-bajo/{tipo}', [PdfController::class, 'reporteStockBajo'])->name('pdf.stock_bajo');
+Route::get('/pdf/usuarios-pedidos/{tipo}', [PdfController::class, 'reporteUsuariosPedidos'])->name('pdf.usuarios_pedidos');
+Route::get('/pdf/productos-por-categoria/{tipo}', [PdfController::class, 'reporteProductosPorCategoria'])->name('pdf.productos_categoria');
+
 
     // ==========================================
     // RUTAS ESPECÍFICAS ADICIONALES

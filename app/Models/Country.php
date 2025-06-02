@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Country extends Model
 {
+    public function country()
+{
+    return $this->belongsTo(\App\Models\Country::class, 'CountryId', 'CountryId');
+}
+
     // Nombre de la clave primaria
     protected $primaryKey = 'CountryId';
 

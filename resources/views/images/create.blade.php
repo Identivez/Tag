@@ -1,10 +1,25 @@
 @extends('layouts.app')
 
-@section('title','Crear Imagen')
+@section('title','Subir Imagen de Producto')
 
 @section('content')
-  <h1>Crear Imagen</h1>
-  <form action="{{ route('images.store') }}" method="POST">
+  <h1>Subir Imagen de Producto</h1>
+
+  @if(session('success'))
+    <div style="color: green">{{ session('success') }}</div>
+  @endif
+
+  @if ($errors->any())
+    <div style="color: red">
+      <ul>
+        @foreach ($errors->all() as $error)
+          <li>{{ $error }}</li>
+        @endforeach
+      </ul>
+    </div>
+  @endif
+
+  <form action="{{ route('images.store') }}" method="POST" enctype="multipart/form-data">
     @csrf
 
     <div class="form-group">
@@ -17,10 +32,10 @@
     </div>
 
     <div class="form-group">
-      <label for="ImageFileName">Nombre de Archivo</label>
-      <input type="text" name="ImageFileName" id="ImageFileName">
+      <label for="image">Seleccionar Archivo (imagen o PDF)</label>
+      <input type="file" name="image" id="image" accept="image/*,application/pdf" required>
     </div>
 
-    <button type="submit" class="btn">Guardar</button>
+    <button type="submit" class="btn">Subir</button>
   </form>
 @endsection

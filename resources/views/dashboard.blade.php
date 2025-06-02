@@ -73,7 +73,7 @@
                             </a>
                         </li>
                         <li class="mb-2">
-                            <a href="{{ route('orders.user') }}" class="text-decoration-none text-dark">
+                            <a href="{{ route('orders.index') }}" class="text-decoration-none text-dark">
                                 <i class="fas fa-shopping-bag me-2"></i>Mis Pedidos
                             </a>
                         </li>
@@ -330,7 +330,7 @@
                 <div class="bg-white shadow-sm rounded p-4 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0">Pedidos Recientes</h5>
-                        <a href="{{ route('orders.user') }}" class="btn btn-sm btn-outline-success">Ver Todos</a>
+                        <a href="{{ route('orders.index') }}" class="btn btn-sm btn-outline-success">Ver Todos</a>
                     </div>
 
                     @php

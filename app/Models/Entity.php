@@ -6,6 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class Entity extends Model
 {
+public function entity()
+{
+    return $this->belongsTo(\App\Models\Entity::class, 'EntityId', 'EntityId');
+}
+
     // La tabla usa clave primaria EntityId
     protected $primaryKey = 'EntityId';
 

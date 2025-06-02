@@ -155,11 +155,11 @@
                                             </li>
                                         @endauth
                                         <li>
-                                            <a class="btn btn-success text-white mt-2"
-                                               href="{{ route('shop.show', $product->ProductId) }}"
-                                               title="Ver detalles">
-                                                <i class="far fa-eye"></i>
-                                            </a>
+  <a href="{{ route('shop.product', $product->ProductId) }}">
+    Ver producto
+</a>
+
+
                                         </li>
                                         @auth
                                             <li>
@@ -184,7 +184,7 @@
                             </div>
 
                             <div class="card-body d-flex flex-column">
-                                <a href="{{ route('shop.show', $product->ProductId) }}"
+                                <a href="{{ route('shop.product', $product->ProductId) }}"
                                    class="h3 text-decoration-none text-dark">{{ $product->Name }}</a>
 
                                 @if($product->Brand)

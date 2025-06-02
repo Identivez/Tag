@@ -27,4 +27,9 @@ class Image extends Model
     {
         return $this->belongsTo(\App\Models\Product::class, 'ProductId', 'ProductId');
     }
+    public function getUrlAttribute()
+{
+    return asset('storage/' . $this->ImageFileName);
+}
+
 }

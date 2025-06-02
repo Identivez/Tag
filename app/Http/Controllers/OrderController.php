@@ -174,7 +174,7 @@ class OrderController extends Controller
             return redirect()->back()
                 ->with('error', 'Hubo un error al procesar tu pedido. Por favor, inténtalo de nuevo más tarde.');
         }
-        $order->user->notify(new \App\Notifications\OrderConfirmation($order));
+
     }
 
     /**

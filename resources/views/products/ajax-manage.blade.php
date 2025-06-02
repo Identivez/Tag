@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.app')
 
 @section('title', 'Gestión de Productos por Categoría')
@@ -76,19 +75,23 @@
 
 @section('scripts')
 <script>
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        }
+    });
+
     function buscarProductos(categoryId) {
         if (!categoryId) {
             $('#resultado_categoria').html('<p class="text-danger">Selecciona una categoría primero.</p>');
             return;
         }
 
-        // Mostrar mensaje de carga
         $('#resultado_categoria').html('<p><i class="fa fa-spinner fa-spin"></i> Cargando productos...</p>');
 
-        // Hacer petición AJAX
         $.ajax({
             type: 'GET',
-            url: '/productos/buscar/' + categoryId,
+            url: '/ajax/products/category/' + categoryId,
             success: function(data) {
                 $('#resultado_categoria').html(data);
             },
@@ -100,13 +103,11 @@
     }
 
     function incrementarStock(productId, categoryId) {
-        // Hacer petición AJAX silenciosa
         $.ajax({
-            type: 'GET',
-            url: '/productos/incrementar/' + productId + '/' + categoryId,
+            type: 'POST',
+            url: '/ajax/products/' + productId + '/increment-stock/' + categoryId,
             success: function(data) {
-                // Recargar la lista de productos sin mostrar el mensaje de éxito
-                buscarProductos(categoryId);
+                $('#resultado_categoria').html(data);
             },
             error: function(error) {
                 console.error('Error al incrementar stock:', error);
@@ -116,13 +117,11 @@
     }
 
     function decrementarStock(productId, categoryId) {
-        // Hacer petición AJAX silenciosa
         $.ajax({
-            type: 'GET',
-            url: '/productos/decrementar/' + productId + '/' + categoryId,
+            type: 'POST',
+            url: '/ajax/products/' + productId + '/decrement-stock/' + categoryId,
             success: function(data) {
-                // Recargar la lista de productos sin mostrar el mensaje de éxito
-                buscarProductos(categoryId);
+                $('#resultado_categoria').html(data);
             },
             error: function(error) {
                 console.error('Error al decrementar stock:', error);
@@ -132,24 +131,18 @@
     }
 
     function editarProducto(productId) {
-        // Limpiar resultados anteriores
         $('#update_result').html('');
 
-        // Hacer petición AJAX para obtener datos del producto
         $.ajax({
             type: 'GET',
-            url: '/productos/obtener/' + productId,
+            url: '/ajax/products/' + productId + '/get',
             success: function(response) {
                 if (response.success) {
                     const product = response.product;
-
-                    // Llenar el formulario
                     $('#edit_product_id').val(product.ProductId);
                     $('#edit_name').val(product.Name);
                     $('#edit_price').val(product.Price);
                     $('#edit_stock').val(product.Stock);
-
-                    // Mostrar el modal
                     $('#editProductModal').modal('show');
                 } else {
                     alert('Error: ' + response.message);
@@ -167,23 +160,19 @@
         const data = {
             Name: $('#edit_name').val(),
             Price: $('#edit_price').val(),
-            Stock: $('#edit_stock').val(),
-            _token: '{{ csrf_token() }}'
+            Stock: $('#edit_stock').val()
         };
 
-        // Validar datos
         if (!data.Name || !data.Price || !data.Stock) {
             $('#update_result').html('<div class="alert alert-danger">Todos los campos son obligatorios.</div>');
             return;
         }
 
-        // Mostrar mensaje de carga
         $('#update_result').html('<p><i class="fa fa-spinner fa-spin"></i> Guardando cambios...</p>');
 
-        // Hacer petición AJAX
         $.ajax({
             type: 'PUT',
-            url: '/productos/actualizar/' + productId,
+            url: '/ajax/products/' + productId + '/update',
             data: data,
             success: function(response) {
                 if (response.success) {
@@ -198,17 +187,11 @@
                             <p><strong>Stock nuevo:</strong> ${response.newProduct.Stock}</p>
                         </div>
                     `);
-
-                    // Actualizar los productos si hay una categoría seleccionada
                     if ($('#category_id').val()) {
                         buscarProductos($('#category_id').val());
                     }
                 } else {
-                    $('#update_result').html(`
-                        <div class="alert alert-danger">
-                            Error: ${response.message}
-                        </div>
-                    `);
+                    $('#update_result').html(`<div class="alert alert-danger">Error: ${response.message}</div>`);
                 }
             },
             error: function(error) {
@@ -247,15 +230,11 @@
         margin: 2px;
     }
 
-    /* Asegúrate de que las cards tengan altura mínima */
     .card {
         min-height: 300px;
     }
 
-    /* Agrega esto para los resultados sean elementos independientes */
     #resultado_categoria, #resultado_proveedor {
         min-height: 150px;
     }
 </style>
-
-

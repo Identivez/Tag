@@ -19,28 +19,8 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('shop.index') }}">Tienda</a>
                     </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="categoriesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            Categorías
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="categoriesDropdown">
-                            @php
-                                try {
-                                    $categories = \App\Models\Category::all();
-                                } catch (\Exception $e) {
-                                    $categories = collect();
-                                }
-                            @endphp
-                            @forelse($categories as $category)
-                                <li><a class="dropdown-item" href="{{ route('shop.category', $category->CategoryId) }}">{{ $category->Name }}</a></li>
-                            @empty
-                                <li><span class="dropdown-item text-muted">No hay categorías disponibles</span></li>
-                            @endforelse
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('contact') }}">Contacto</a>
-                    </li>
+
+
                     @auth
                         @if(Auth::user()->email === 'admin@test.com')
                             <li class="nav-item">

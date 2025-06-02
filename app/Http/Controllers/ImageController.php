@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Image;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ImageController extends Controller
 {
-    public function index()
+  public function index()
     {
         $images = Image::with('product')->get();
         return view('images.index', compact('images'));
@@ -22,16 +23,20 @@ class ImageController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
-            'ProductId'     => 'required|exists:products,ProductId',
-            'ImageFileName' => 'nullable|string',
+        $request->validate([
+            'ProductId' => 'required|exists:products,ProductId',
+            'image'     => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        Image::create($data);
+        // Almacenar archivo en storage/app/public/images
+        $path = $request->file('image')->store('images', 'public');
 
-        return redirect()
-            ->route('images.index')
-            ->with('success', 'Imagen creada correctamente.');
+        Image::create([
+            'ProductId' => $request->ProductId,
+            'ImageFileName' => $path, // Guardamos la ruta relativa
+        ]);
+
+        return redirect()->route('images.index')->with('success', 'Archivo subido correctamente.');
     }
 
     public function show(Image $image)
@@ -47,24 +52,33 @@ class ImageController extends Controller
 
     public function update(Request $request, Image $image)
     {
-        $data = $request->validate([
-            'ImageFileName' => 'nullable|string',
+        $request->validate([
+            'image' => 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // Solo actualizamos el filename; el ProductId permanece fijo
-        $image->update($data);
+        if ($request->hasFile('image')) {
+            // Borrar archivo anterior si existe
+            if ($image->ImageFileName && Storage::disk('public')->exists($image->ImageFileName)) {
+                Storage::disk('public')->delete($image->ImageFileName);
+            }
 
-        return redirect()
-            ->route('images.index')
-            ->with('success', 'Imagen actualizada correctamente.');
+            // Subir nuevo archivo
+            $path = $request->file('image')->store('images', 'public');
+            $image->update(['ImageFileName' => $path]);
+        }
+
+        return redirect()->route('images.index')->with('success', 'Imagen actualizada correctamente.');
     }
 
     public function destroy(Image $image)
     {
+        // Eliminar archivo físico si existe
+        if ($image->ImageFileName && Storage::disk('public')->exists($image->ImageFileName)) {
+            Storage::disk('public')->delete($image->ImageFileName);
+        }
+
         $image->delete();
 
-        return redirect()
-            ->route('images.index')
-            ->with('success', 'Imagen eliminada correctamente.');
+        return redirect()->route('images.index')->with('success', 'Imagen eliminada correctamente.');
     }
 }

@@ -2,70 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Order;
-use App\Models\OrderDetail;
-use Barryvdh\DomPDF\Facade\PDF;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\View;
 
-class PDFController extends Controller
+class PdfController extends Controller
 {
     public function index()
     {
-        // Vista para seleccionar reportes
         return view('pdf.index');
     }
 
-    // Método genérico para crear PDFs con un conjunto de datos
-    public function createPDF($data, $view, $type)
+    public function reporteProductos($tipo)
     {
-        $date = date('Y-m-d');
-        $pdf = PDF::loadView($view, ['data' => $data, 'date' => $date]);
-
-        if($type == 1) {
-            return $pdf->stream('reporte.pdf'); // Visualizar
-        } else {
-            return $pdf->download('reporte.pdf'); // Descargar
-        }
+        $productos = Product::with('category')->orderBy('Name')->get();
+        $date = now();
+        $pdf = Pdf::loadView('pdf.reporte_productos', compact('productos', 'date'));
+        return $this->retornarPDF($pdf, $tipo);
     }
 
-    // Reporte de productos
-    public function productReport($type)
+    public function reporteStockBajo($tipo)
     {
-        $view = "pdf.product_report";
-        $products = Product::orderBy('Name')->get();
-        return $this->createPDF($products, $view, $type);
+        $productos = Product::lowStock()->get();
+        $date = now();
+        $pdf = Pdf::loadView('pdf.reporte_stock_bajo', compact('productos', 'date'));
+        return $this->retornarPDF($pdf, $tipo);
     }
 
-    // Reporte de factura/orden
-    public function orderInvoice($type, $orderId)
+    public function reporteUsuariosPedidos($tipo)
     {
-        $order = Order::with(['user', 'payment', 'shippingAddress', 'billingAddress'])
-                      ->where('OrderId', $orderId)
-                      ->first();
-
-        $details = OrderDetail::with('product')
-                         ->where('OrderId', $orderId)
-                         ->get();
-
-        // Usar el método específico para facturas
-        return $this->createInvoicePDF($order, $details, $type);
+        $usuarios = User::withCount('orders')->orderByDesc('orders_count')->get();
+        $date = now();
+        $pdf = Pdf::loadView('pdf.reporte_usuarios_pedidos', compact('usuarios', 'date'));
+        return $this->retornarPDF($pdf, $tipo);
     }
+    public function reporteProductosPorCategoria($tipo)
+{
+    $categorias = \App\Models\Category::with('products')->get();
+    $date = now();
+    $pdf = Pdf::loadView('pdf.reporte_productos_categoria', compact('categorias', 'date'));
+    return $this->retornarPDF($pdf, $tipo);
+}
 
-    // Método específico para crear PDFs de facturas
-    protected function createInvoicePDF($order, $details, $type)
+
+    private function retornarPDF($pdf, $tipo)
     {
-        $date = date('Y-m-d');
-        $pdf = PDF::loadView('pdf.order_invoice', [
-            'order' => $order,
-            'details' => $details,
-            'date' => $date
-        ]);
-
-        if($type == 1) {
-            return $pdf->stream('factura.pdf');
-        } else {
-            return $pdf->download('factura.pdf');
-        }
+        return $tipo == 1 ? $pdf->stream('reporte.pdf') : $pdf->download('reporte.pdf');
     }
 }

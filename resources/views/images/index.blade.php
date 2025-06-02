@@ -4,14 +4,18 @@
 
 @section('content')
   <h1>Imágenes</h1>
-  <a href="{{ route('images.create') }}" class="btn">Crear Imagen</a>
+  <a href="{{ route('images.create') }}" class="btn">Subir Nueva Imagen</a>
+
+  @if (session('success'))
+    <p style="color:green">{{ session('success') }}</p>
+  @endif
 
   <table class="table-crud">
     <thead>
       <tr>
         <th>ID</th>
         <th>Producto</th>
-        <th>Archivo</th>
+        <th>Vista previa</th>
         <th>Acciones</th>
       </tr>
     </thead>
@@ -20,7 +24,22 @@
         <tr>
           <td>{{ $img->ImageId }}</td>
           <td>{{ $img->product->Name }}</td>
-          <td>{{ $img->ImageFileName }}</td>
+          <td>
+            @php
+              $isPdf = \Illuminate\Support\Str::endsWith($img->ImageFileName, '.pdf');
+            @endphp
+
+            @if ($isPdf)
+              📄 <a href="{{ asset('storage/' . $img->ImageFileName) }}" target="_blank">Ver PDF</a>
+            @else
+              <img src="{{ asset('storage/' . $img->ImageFileName) }}" alt="imagen" width="100"><br>
+              <a href="{{ asset('storage/' . $img->ImageFileName) }}" target="_blank">Ver imagen</a>
+            @endif
+
+            <br>
+            <a href="{{ asset('storage/' . $img->ImageFileName) }}" download>Descargar</a>
+          </td>
+
           <td>
             <a href="{{ route('images.show', $img) }}" class="btn">Ver</a>
             <a href="{{ route('images.edit', $img) }}" class="btn">Editar</a>
