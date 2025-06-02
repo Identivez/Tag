@@ -1,283 +1,584 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .card-stat {
-            border-left: 4px solid #007bff;
-        }
-        .card-stat.success {
-            border-left-color: #28a745;
-        }
-        .card-stat.warning {
-            border-left-color: #ffc107;
-        }
-        .card-stat.danger {
-            border-left-color: #dc3545;
-        }
-    </style>
-</head>
-<body class="bg-light">
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="fas fa-store"></i> Mi Sistema
-            </a>
+@extends('template.master')
 
-            <div class="navbar-nav ms-auto">
-                <div class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                        <i class="fas fa-user"></i> {{ auth()->user()->firstName }} {{ auth()->user()->lastName }}
-                        @if(auth()->user()->email === 'admin@test.com')
-                            <span class="badge bg-danger ms-1">Admin</span>
-                        @elseif(auth()->user()->email === 'manager@test.com')
-                            <span class="badge bg-warning ms-1">Manager</span>
-                        @endif
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog"></i> Mi Perfil</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="{{ route('logout') }}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
-                    </ul>
-                </div>
+@section('contenido_central')
+<div class="container py-5">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-4 mb-4">
+                <h2 class="h3 mb-3">¡Bienvenido, {{ Auth::user()->firstName }}!</h2>
+                @if(Auth::user()->email === 'admin@test.com')
+                    <p class="text-muted">Panel de administración de TAG & SOLE. Gestiona productos, usuarios, correos y revisa estadísticas del sistema.</p>
+                @else
+                    <p class="text-muted">Gestiona tu cuenta, revisa tus pedidos y mantente al día con las últimas tendencias en TAG & SOLE.</p>
+                @endif
             </div>
         </div>
-    </nav>
-
-    <div class="container-fluid mt-4">
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="fas fa-check-circle"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle"></i> {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
-
-        <div class="row">
-            <div class="col-12">
-                <h1 class="h3 mb-4">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                    @if(auth()->user()->email === 'admin@test.com')
-                        - Panel de Administración
-                    @elseif(auth()->user()->email === 'manager@test.com')
-                        - Panel de Manager
-                    @else
-                        - Panel de Usuario
-                    @endif
-                </h1>
-            </div>
-        </div>
-
-        <!-- Tarjetas de estadísticas (solo para admin/manager) -->
-        @if(auth()->user()->email === 'admin@test.com' || auth()->user()->email === 'manager@test.com')
-        <div class="row mb-4">
-            <div class="col-xl-3 col-md-6">
-                <div class="card card-stat border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-users fa-2x text-primary"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Usuarios</div>
-                                <div class="h5 mb-0">{{ $userCount ?? 0 }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card card-stat success border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-shopping-cart fa-2x text-success"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Pedidos</div>
-                                <div class="h5 mb-0">{{ $orderCount ?? 0 }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card card-stat warning border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-box fa-2x text-warning"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Productos</div>
-                                <div class="h5 mb-0">{{ $productCount ?? 0 }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-xl-3 col-md-6">
-                <div class="card card-stat danger border-0 shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div class="flex-shrink-0">
-                                <i class="fas fa-dollar-sign fa-2x text-danger"></i>
-                            </div>
-                            <div class="flex-grow-1 ms-3">
-                                <div class="text-muted small">Ventas Mes</div>
-                                <div class="h5 mb-0">${{ number_format($monthlySales ?? 0, 2) }}</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Módulos de navegación -->
-        <div class="row">
-            <!-- Módulos básicos para todos los usuarios -->
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0"><i class="fas fa-shopping-bag"></i> E-commerce</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="{{ route('cart.view') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-shopping-cart"></i> Mi Carrito
-                            </a>
-                            <a href="{{ route('favorites.user') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-heart"></i> Mis Favoritos
-                            </a>
-                            <a href="{{ route('orders.user') }}" class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-list-alt"></i> Mis Pedidos
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Módulos para Manager -->
-            @if(auth()->user()->email === 'manager@test.com' || auth()->user()->email === 'admin@test.com')
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="card-title mb-0"><i class="fas fa-cogs"></i> Gestión (Manager)</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="{{ route('categorias.index') }}" class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-tags"></i> Categorías
-                            </a>
-                            <a href="{{ route('productos.index') }}" class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-box"></i> Productos
-                            </a>
-                            <a href="{{ route('paises.index') }}" class="btn btn-outline-warning btn-sm">
-                                <i class="fas fa-globe"></i> Ubicaciones
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            <!-- Módulos solo para Admin -->
-            @if(auth()->user()->email === 'admin@test.com')
-            <div class="col-lg-4 mb-4">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header bg-danger text-white">
-                        <h5 class="card-title mb-0"><i class="fas fa-user-shield"></i> Administración</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="d-grid gap-2">
-                            <a href="{{ route('users.index') }}" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-users"></i> Usuarios
-                            </a>
-                            <a href="{{ route('roles.index') }}" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-user-tag"></i> Roles
-                            </a>
-                            <a href="{{ route('admin.statistics') }}" class="btn btn-outline-danger btn-sm">
-                                <i class="fas fa-chart-bar"></i> Estadísticas
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-        </div>
-
-        <!-- Acciones rápidas (para admin/manager) -->
-        @if(auth()->user()->email === 'admin@test.com' || auth()->user()->email === 'manager@test.com')
-        <div class="row">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-2">
-                            <div class="col-md-3">
-                                <a href="{{ route('productos.create') }}" class="btn btn-success w-100">
-                                    <i class="fas fa-plus"></i> Nuevo Producto
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('categorias.create') }}" class="btn btn-info w-100">
-                                    <i class="fas fa-plus"></i> Nueva Categoría
-                                </a>
-                            </div>
-                            @if(auth()->user()->email === 'admin@test.com')
-                            <div class="col-md-3">
-                                <a href="{{ route('users.create') }}" class="btn btn-primary w-100">
-                                    <i class="fas fa-user-plus"></i> Nuevo Usuario
-                                </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="{{ route('pdf.index') }}" class="btn btn-secondary w-100">
-                                    <i class="fas fa-file-pdf"></i> Reportes PDF
-                                </a>
-                            </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
-
-        <!-- Información de bienvenida para usuarios normales -->
-        @if(auth()->user()->email !== 'admin@test.com' && auth()->user()->email !== 'manager@test.com')
-        <div class="row">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body text-center">
-                        <h3><i class="fas fa-smile"></i> ¡Bienvenido {{ auth()->user()->firstName }}!</h3>
-                        <p class="lead">Explora nuestros productos y gestiona tus compras desde aquí.</p>
-                        <a href="{{ route('home') }}" class="btn btn-primary">
-                            <i class="fas fa-shopping-bag"></i> Ir a la Tienda
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-        @endif
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    <div class="row">
+        <!-- Menú lateral -->
+        <div class="col-md-3">
+            <div class="bg-white shadow-sm rounded p-3 mb-4">
+                <h5 class="border-bottom pb-2 mb-3">
+                    @if(Auth::user()->email === 'admin@test.com')
+                        Panel de Control
+                    @else
+                        Mi Cuenta
+                    @endif
+                </h5>
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <a href="{{ route('dashboard') }}" class="text-decoration-none {{ request()->routeIs('dashboard') ? 'text-success fw-bold' : 'text-dark' }}">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                    </li>
+
+                    @if(Auth::user()->email === 'admin@test.com')
+                        <!-- Menú específico para Admin -->
+                        <li class="mb-2">
+                            <a href="{{ route('admin.dashboard') }}" class="text-decoration-none text-danger">
+                                <i class="fas fa-cogs me-2"></i>Dashboard Avanzado
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('products.index') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-box me-2"></i>Gestionar Productos
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('users.index') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-users me-2"></i>Gestionar Usuarios
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('categories.index') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-tags me-2"></i>Categorías
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('orders.index') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-shopping-cart me-2"></i>Todos los Pedidos
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('admin.statistics') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-chart-bar me-2"></i>Estadísticas
+                            </a>
+                        </li>
+                        <!-- NUEVO: Sistema de Correos -->
+                        <li class="mb-2">
+                            <a href="{{ route('admin.emails.form') }}" class="text-decoration-none text-info">
+                                <i class="fas fa-envelope me-2"></i>Sistema de Correos
+                            </a>
+                        </li>
+                    @else
+                        <!-- Menú para usuarios normales -->
+                        <li class="mb-2">
+                            <a href="{{ route('home') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-home me-2"></i>Inicio
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('favorites.user') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-heart me-2"></i>Favoritos
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <a href="{{ route('cart.view') }}" class="text-decoration-none text-dark">
+                                <i class="fas fa-shopping-cart me-2"></i>Mi Carrito
+                            </a>
+                        </li>
+                    @endif
+                </ul>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="col-md-9">
+            @if(Auth::user()->email === 'admin@test.com')
+                <!-- Dashboard para Admin -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-primary">
+                                <i class="fas fa-users fa-2x"></i>
+                            </div>
+                            @php
+                                $totalUsers = 0;
+                                try {
+                                    $totalUsers = \App\Models\User::count();
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">{{ $totalUsers }}</h4>
+                            <p class="text-muted mb-0">Total Usuarios</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-success">
+                                <i class="fas fa-box fa-2x"></i>
+                            </div>
+                            @php
+                                $totalProducts = 0;
+                                try {
+                                    $totalProducts = \App\Models\Product::count();
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">{{ $totalProducts }}</h4>
+                            <p class="text-muted mb-0">Total Productos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-warning">
+                                <i class="fas fa-shopping-bag fa-2x"></i>
+                            </div>
+                            @php
+                                $totalOrders = 0;
+                                try {
+                                    $totalOrders = \App\Models\Order::count();
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">{{ $totalOrders }}</h4>
+                            <p class="text-muted mb-0">Total Pedidos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-danger">
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                            @php
+                                $monthlySales = 0;
+                                try {
+                                    $monthlySales = \App\Models\Order::whereMonth('OrderDate', now()->month)
+                                        ->whereYear('OrderDate', now()->year)
+                                        ->sum('TotalAmount') ?? 0;
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">${{ number_format($monthlySales, 0) }}</h4>
+                            <p class="text-muted mb-0">Ventas del Mes</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones rápidas para Admin -->
+                <div class="bg-white shadow-sm rounded p-4 mb-4">
+                    <h5 class="mb-3">Acciones Rápidas</h5>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('products.create') }}" class="btn btn-success w-100">
+                                <i class="fas fa-plus me-2"></i>Nuevo Producto
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('users.create') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-user-plus me-2"></i>Nuevo Usuario
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('categories.create') }}" class="btn btn-info w-100">
+                                <i class="fas fa-tags me-2"></i>Nueva Categoría
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('admin.reports') }}" class="btn btn-secondary w-100">
+                                <i class="fas fa-chart-line me-2"></i>Ver Reportes
+                            </a>
+                        </div>
+                        <!-- NUEVA FILA: Sistema de Comunicación y Herramientas -->
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('admin.emails.form') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-envelope me-2"></i>Enviar Correo
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('pdf.index') }}" class="btn btn-dark w-100">
+                                <i class="fas fa-file-pdf me-2"></i>Generar PDF
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('ajax.products.index') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-cogs me-2"></i>Gestión AJAX
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ route('admin.emails.test') }}" class="btn btn-outline-warning w-100">
+                                <i class="fas fa-flask me-2"></i>Test Email
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NUEVA SECCIÓN: Herramientas de Comunicación -->
+                <div class="bg-white shadow-sm rounded p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-envelope text-info me-2"></i>Sistema de Comunicación
+                        </h5>
+                        <span class="badge bg-info">{{ $totalUsers }} usuarios</span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card border-info">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-paper-plane fa-2x text-info mb-3"></i>
+                                    <h6 class="card-title">Envío de Correos</h6>
+                                    <p class="card-text text-muted small">
+                                        Envía correos personalizados a usuarios, confirmaciones de pedidos y newsletters.
+                                    </p>
+                                    <a href="{{ route('admin.emails.form') }}" class="btn btn-info btn-sm">
+                                        <i class="fas fa-envelope me-1"></i>Acceder
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card border-secondary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-chart-line fa-2x text-secondary mb-3"></i>
+                                    <h6 class="card-title">Estadísticas Email</h6>
+                                    <p class="card-text text-muted small">
+                                        Revisa estadísticas de envíos, aperturas y efectividad de campañas.
+                                    </p>
+                                    <a href="{{ route('admin.emails.history') }}" class="btn btn-secondary btn-sm">
+                                        <i class="fas fa-chart-bar me-1"></i>Ver Stats
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedidos recientes para Admin -->
+                <div class="bg-white shadow-sm rounded p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Pedidos Recientes del Sistema</h5>
+                        <div>
+                            <a href="{{ route('orders.index') }}" class="btn btn-sm btn-outline-primary me-2">Ver Todos</a>
+                            <!-- NUEVO: Botón para enviar confirmaciones masivas -->
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-envelope me-1"></i>Correos
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="#" onclick="sendBulkConfirmations()">
+                                        <i class="fas fa-paper-plane me-2"></i>Enviar Confirmaciones
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{{ route('admin.emails.form') }}">
+                                        <i class="fas fa-edit me-2"></i>Correo Personalizado
+                                    </a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    @php
+                        $recentOrders = collect();
+                        try {
+                            $recentOrders = \App\Models\Order::orderBy('OrderDate', 'desc')
+                                ->take(5)
+                                ->get();
+                        } catch (\Exception $e) {
+                            // Si hay error, mantener colección vacía
+                        }
+                    @endphp
+
+                    @if($recentOrders->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Pedido #</th>
+                                        <th>Usuario</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recentOrders as $order)
+                                    <tr>
+                                        <td>#{{ $order->OrderId }}</td>
+                                        <td>
+                                            @php
+                                                $user = null;
+                                                try {
+                                                    $user = \App\Models\User::find($order->UserId);
+                                                } catch (\Exception $e) {
+                                                    // Si hay error, user será null
+                                                }
+                                            @endphp
+                                            {{ $user ? $user->firstName . ' ' . $user->lastName : 'Usuario no encontrado' }}
+                                        </td>
+                                        <td>{{ $order->OrderDate ? \Carbon\Carbon::parse($order->OrderDate)->format('d/m/Y') : 'N/A' }}</td>
+                                        <td>${{ number_format($order->TotalAmount ?? 0, 2) }}</td>
+                                        <td>
+                                            <span class="badge
+                                                @if($order->OrderStatus == 'Completado') bg-success
+                                                @elseif($order->OrderStatus == 'Cancelado') bg-danger
+                                                @elseif($order->OrderStatus == 'Enviado') bg-info
+                                                @else bg-warning @endif">
+                                                {{ $order->OrderStatus ?? 'Pendiente' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a href="{{ route('orders.show', $order->OrderId) }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <!-- NUEVO: Botón de envío de confirmación individual -->
+                                                <button type="button" class="btn btn-sm btn-outline-info"
+                                                        onclick="sendOrderConfirmation({{ $order->OrderId }})"
+                                                        title="Enviar confirmación por email">
+                                                    <i class="fas fa-envelope"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No hay pedidos en el sistema aún.</p>
+                        </div>
+                    @endif
+                </div>
+
+            @else
+                <!-- Dashboard para usuarios normales (sin cambios) -->
+                <!-- Estadísticas del usuario -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-success">
+                                <i class="fas fa-shopping-bag fa-2x"></i>
+                            </div>
+                            @php
+                                $userOrdersCount = 0;
+                                try {
+                                    $userOrdersCount = \App\Models\Order::where('UserId', Auth::id())->count();
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">{{ $userOrdersCount }}</h4>
+                            <p class="text-muted mb-0">Pedidos Realizados</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-danger">
+                                <i class="fas fa-heart fa-2x"></i>
+                            </div>
+                            @php
+                                $userFavoritesCount = 0;
+                                try {
+                                    $userFavoritesCount = \App\Models\Favorite::where('UserId', Auth::id())->count();
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">{{ $userFavoritesCount }}</h4>
+                            <p class="text-muted mb-0">Productos Favoritos</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="bg-white shadow-sm rounded p-3 text-center">
+                            <div class="text-warning">
+                                <i class="fas fa-shopping-cart fa-2x"></i>
+                            </div>
+                            @php
+                                $userCartItemsCount = 0;
+                                try {
+                                    $userCartItemsCount = \App\Models\CartItem::where('UserId', Auth::id())->sum('Quantity') ?? 0;
+                                } catch (\Exception $e) {
+                                    // Si hay error, mantener en 0
+                                }
+                            @endphp
+                            <h4 class="mt-2">{{ $userCartItemsCount }}</h4>
+                            <p class="text-muted mb-0">Items en Carrito</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedidos recientes del usuario -->
+                <div class="bg-white shadow-sm rounded p-4 mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Pedidos Recientes</h5>
+                        <a href="{{ route('shop.index') }}" class="btn btn-sm btn-outline-success">Ver Tienda</a>
+                    </div>
+
+                    @php
+                        $recentOrders = collect();
+                        try {
+                            $recentOrders = \App\Models\Order::where('UserId', Auth::id())
+                                ->orderBy('OrderDate', 'desc')
+                                ->take(3)
+                                ->get();
+                        } catch (\Exception $e) {
+                            // Si hay error, mantener colección vacía
+                        }
+                    @endphp
+
+                    @if($recentOrders->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Pedido #</th>
+                                        <th>Fecha</th>
+                                        <th>Total</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($recentOrders as $order)
+                                    <tr>
+                                        <td>#{{ $order->OrderId }}</td>
+                                        <td>{{ $order->OrderDate ? \Carbon\Carbon::parse($order->OrderDate)->format('d/m/Y') : 'N/A' }}</td>
+                                        <td>${{ number_format($order->TotalAmount ?? 0, 2) }}</td>
+                                        <td>
+                                            <span class="badge
+                                                @if($order->OrderStatus == 'Completado') bg-success
+                                                @elseif($order->OrderStatus == 'Cancelado') bg-danger
+                                                @elseif($order->OrderStatus == 'Enviado') bg-info
+                                                @else bg-warning @endif">
+                                                {{ $order->OrderStatus ?? 'Pendiente' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ route('orders.confirmation', $order->OrderId) }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-bag fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">Aún no has realizado ningún pedido.</p>
+                            <a href="{{ route('shop.index') }}" class="btn btn-success">Explorar Productos</a>
+                        </div>
+                    @endif
+                </div>
+
+                <!-- Productos favoritos recientes del usuario -->
+                <div class="bg-white shadow-sm rounded p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Productos Favoritos</h5>
+                        <a href="{{ route('favorites.user') }}" class="btn btn-sm btn-outline-danger">Ver Todos</a>
+                    </div>
+
+                    @php
+                        $recentFavorites = collect();
+                        try {
+                            $recentFavorites = \App\Models\Favorite::where('UserId', Auth::id())
+                                ->orderBy('AddedAt', 'desc')
+                                ->take(4)
+                                ->get();
+                        } catch (\Exception $e) {
+                            // Si hay error, mantener colección vacía
+                        }
+                    @endphp
+
+                    @if($recentFavorites->count() > 0)
+                        <div class="row">
+                            @foreach($recentFavorites as $favorite)
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    @php
+                                        $product = null;
+                                        try {
+                                            $product = \App\Models\Product::find($favorite->ProductId);
+                                        } catch (\Exception $e) {
+                                            // Si hay error, product será null
+                                        }
+                                    @endphp
+
+                                    @if($product)
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                            <i class="fas fa-image fa-2x text-muted"></i>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <h6 class="card-title mb-1">{{ Str::limit($product->Name, 20) }}</h6>
+                                            <p class="card-text text-success mb-1">${{ number_format($product->Price ?? 0, 2) }}</p>
+                                            <a href="{{ route('shop.product', $product->ProductId) }}" class="btn btn-sm btn-outline-success">Ver</a>
+                                        </div>
+                                    @else
+                                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                            <i class="fas fa-image fa-2x text-muted"></i>
+                                        </div>
+                                        <div class="card-body p-2">
+                                            <h6 class="card-title mb-1">Producto no disponible</h6>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4">
+                            <i class="fas fa-heart fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No tienes productos favoritos aún.</p>
+                            <a href="{{ route('shop.index') }}" class="btn btn-outline-danger">Explorar Productos</a>
+                        </div>
+                    @endif
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript para funcionalidades de email -->
+<script>
+    // Enviar confirmación de pedido individual
+    function sendOrderConfirmation(orderId) {
+        if (confirm('¿Enviar confirmación por email para el pedido #' + orderId + '?')) {
+            fetch(`/admin/emails/order-confirmation/${orderId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Confirmación enviada correctamente');
+                } else {
+                    alert('Error al enviar confirmación: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al enviar confirmación');
+            });
+        }
+    }
+
+    // Enviar confirmaciones masivas
+    function sendBulkConfirmations() {
+        if (confirm('¿Enviar confirmaciones por email a todos los pedidos pendientes?')) {
+            alert('Función de envío masivo - Implementar según necesidades específicas');
+            // Aquí se implementaría la lógica de envío masivo
+        }
+    }
+</script>
+@endsection

@@ -100,9 +100,13 @@
     </div>
     <div class="row">
         @php
-            $featuredCategories = \App\Models\Category::take(3)->get();
+            try {
+                $featuredCategories = \App\Models\Category::take(3)->get();
+            } catch (\Exception $e) {
+                $featuredCategories = collect();
+            }
         @endphp
-        @foreach($featuredCategories as $category)
+        @forelse($featuredCategories as $category)
         <div class="col-12 col-md-4 p-5 mt-3">
             <a href="{{ route('shop.category', $category->CategoryId) }}">
                 <img src="{{ asset('estilo/assets/img/category_img_0' . ($loop->iteration) . '.jpg') }}" class="rounded-circle img-fluid border">
@@ -112,7 +116,15 @@
                 <a class="btn btn-success" href="{{ route('shop.category', $category->CategoryId) }}">Ver Productos</a>
             </p>
         </div>
-        @endforeach
+        @empty
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                <h4>Categorías próximamente</h4>
+                <p class="text-muted">Estamos organizando nuestras categorías para ti.</p>
+            </div>
+        </div>
+        @endforelse
     </div>
 </section>
 <!-- End Categories of The Month -->
@@ -131,34 +143,29 @@
         </div>
         <div class="row">
             @php
-                $featuredProducts = \App\Models\Product::with(['category', 'images'])
-                    ->inStock()
-                    ->orderBy('CreatedAt', 'desc')
-                    ->take(3)
-                    ->get();
-
-                // Si no hay productos con CreatedAt, usar ProductId como fallback
-                if ($featuredProducts->isEmpty()) {
+                $featuredProducts = collect();
+                try {
                     $featuredProducts = \App\Models\Product::with(['category', 'images'])
-                        ->inStock()
-                        ->orderBy('ProductId', 'desc')
+                        ->orderBy('CreatedAt', 'desc')
                         ->take(3)
                         ->get();
-                }
 
-                // Si aún no hay productos, usar cualquier producto disponible
-                if ($featuredProducts->isEmpty()) {
-                    $featuredProducts = \App\Models\Product::with(['category', 'images'])
-                        ->orderBy('ProductId', 'desc')
-                        ->take(3)
-                        ->get();
+                    // Si no hay productos con CreatedAt, usar ProductId como fallback
+                    if ($featuredProducts->isEmpty()) {
+                        $featuredProducts = \App\Models\Product::with(['category', 'images'])
+                            ->orderBy('ProductId', 'desc')
+                            ->take(3)
+                            ->get();
+                    }
+                } catch (\Exception $e) {
+                    // Si hay error, mantener colección vacía
                 }
             @endphp
 
             @forelse($featuredProducts as $product)
             <div class="col-12 col-md-4 mb-4">
                 <div class="card h-100">
-                    <a href="{{ route('shop.show', $product->ProductId) }}">
+                    <a href="{{ route('shop.product', $product->ProductId) }}">
                         @if($product->images && $product->images->first())
                             <img src="{{ asset('storage/' . $product->images->first()->ImageFileName) }}" class="card-img-top" alt="{{ $product->Name }}" style="height: 250px; object-fit: cover;">
                         @else
@@ -169,8 +176,14 @@
                         <ul class="list-unstyled d-flex justify-content-between">
                             <li>
                                 @php
-                                    $rating = $product->reviews && $product->reviews->count() > 0 ? $product->reviews->avg('Rating') : 0;
-                                    $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                                    $rating = 0;
+                                    $reviewCount = 0;
+                                    try {
+                                        $rating = $product->reviews && $product->reviews->count() > 0 ? $product->reviews->avg('Rating') : 0;
+                                        $reviewCount = $product->reviews ? $product->reviews->count() : 0;
+                                    } catch (\Exception $e) {
+                                        // Si hay error, mantener valores por defecto
+                                    }
                                 @endphp
                                 @for($i = 1; $i <= 5; $i++)
                                     @if($i <= $rating)
@@ -182,7 +195,7 @@
                             </li>
                             <li class="text-muted text-right">${{ number_format($product->Price, 2) }}</li>
                         </ul>
-                        <a href="{{ route('shop.show', $product->ProductId) }}" class="h2 text-decoration-none text-dark">{{ $product->Name }}</a>
+                        <a href="{{ route('shop.product', $product->ProductId) }}" class="h2 text-decoration-none text-dark">{{ $product->Name }}</a>
                         <p class="card-text">
                             {{ Str::limit($product->Description ?? 'Producto de alta calidad disponible en TAG & SOLE.', 100) }}
                         </p>
@@ -195,7 +208,7 @@
                         </p>
                         <div class="d-flex justify-content-between align-items-center">
                             <div class="btn-group">
-                                <a href="{{ route('shop.show', $product->ProductId) }}" class="btn btn-sm btn-outline-secondary">Ver</a>
+                                <a href="{{ route('shop.product', $product->ProductId) }}" class="btn btn-sm btn-outline-secondary">Ver</a>
                                 @auth
                                     <form action="{{ route('cart.add') }}" method="POST" class="d-inline">
                                         @csrf

@@ -84,7 +84,6 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             <li><a class="dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li><a class="dropdown-item" href="{{ route('orders.user') }}">Mis Pedidos</a></li>
                             <li><a class="dropdown-item" href="{{ route('favorites.user') }}">Favoritos</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li>

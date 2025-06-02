@@ -25,11 +25,17 @@
                 <h2 class="h2 text-light border-bottom pb-3 border-light">Productos</h2>
                 <ul class="list-unstyled text-light footer-link-list">
                     @php
-                        $footerCategories = \App\Models\Category::take(7)->get();
+                        try {
+                            $footerCategories = \App\Models\Category::take(7)->get();
+                        } catch (\Exception $e) {
+                            $footerCategories = collect();
+                        }
                     @endphp
-                    @foreach($footerCategories as $category)
+                    @forelse($footerCategories as $category)
                         <li><a class="text-decoration-none" href="{{ route('shop.category', $category->CategoryId) }}">{{ $category->Name }}</a></li>
-                    @endforeach
+                    @empty
+                        <li><span class="text-muted">No hay categorías disponibles</span></li>
+                    @endforelse
                 </ul>
             </div>
 
@@ -40,8 +46,8 @@
                     <li><a class="text-decoration-none" href="{{ route('shop.index') }}">Tienda</a></li>
                     <li><a class="text-decoration-none" href="{{ route('contact') }}">Contacto</a></li>
                     @auth
-                        <li><a class="text-decoration-none" href="{{ route('orders.user') }}">Mis Pedidos</a></li>
                         <li><a class="text-decoration-none" href="{{ route('favorites.user') }}">Favoritos</a></li>
+                        <li><a class="text-decoration-none" href="{{ route('dashboard') }}">Mi Cuenta</a></li>
                     @else
                         <li><a class="text-decoration-none" href="{{ route('login') }}">Iniciar Sesión</a></li>
                         <li><a class="text-decoration-none" href="{{ route('register') }}">Registrarse</a></li>
