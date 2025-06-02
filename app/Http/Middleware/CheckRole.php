@@ -1,5 +1,4 @@
 <?php
-// app/Http/Middleware/CheckRole.php
 
 namespace App\Http\Middleware;
 
@@ -12,14 +11,13 @@ class CheckRole
     public function handle(Request $request, Closure $next, $role = null)
     {
         // Verificar si hay sesión activa
-        if (!$request->session()->has('login_web_' . sha1('App\Models\User'))) {
+        if (!Auth::check()) {
             return redirect('/login');
         }
 
-        // Obtener ID del usuario de la sesión
-        $userId = $request->session()->get('login_web_' . sha1('App\Models\User'));
+        $user = Auth::user();
 
-        if (!$userId) {
+        if (!$user) {
             return redirect('/login');
         }
 
@@ -28,8 +26,8 @@ class CheckRole
             return $next($request);
         }
 
-        // Verificación básica por email desde sesión
-        $userEmail = $request->session()->get('user_email');
+        // Verificación directa por email (más confiable que roles en BD)
+        $userEmail = $user->email;
 
         if ($role === 'admin') {
             // Solo admin@test.com puede ser admin
@@ -40,7 +38,7 @@ class CheckRole
 
         if ($role === 'manager') {
             // admin y manager@test.com pueden ser managers
-            if ($userEmail === 'admin@test.com' || $userEmail === 'manager@test.com') {
+            if (in_array($userEmail, ['admin@test.com', 'manager@test.com'])) {
                 return $next($request);
             }
         }

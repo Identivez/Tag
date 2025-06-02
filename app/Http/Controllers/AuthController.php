@@ -1,5 +1,4 @@
 <?php
-// app/Http/Controllers/AuthController.php
 
 namespace App\Http\Controllers;
 
@@ -14,7 +13,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect('/dashboard');
+            return $this->redirectByRole();
         }
         return view('auth.login');
     }
@@ -27,20 +26,32 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        $credentials = [
+            'email' => $request->email,
+            'password' => $request->password
+        ];
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+
             // Guardar email en sesión para el middleware
             $request->session()->put('user_email', $request->email);
-            return redirect('/dashboard')->with('success', 'Bienvenido al sistema');
+
+            // Redirigir según el rol del usuario
+            $redirect = $this->redirectByRole();
+            return $redirect->with('success', 'Bienvenido al sistema');
         }
 
-        return back()->with('error', 'Email o contraseña incorrectos');
+        return back()->withErrors([
+            'email' => 'Las credenciales no coinciden con nuestros registros.',
+        ])->onlyInput('email');
     }
 
     // Mostrar formulario de registro
     public function showRegister()
     {
         if (Auth::check()) {
-            return redirect('/dashboard');
+            return $this->redirectByRole();
         }
         return view('auth.register');
     }
@@ -63,15 +74,107 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
-        return redirect('/dashboard')->with('success', 'Registro exitoso');
+
+        // Guardar email en sesión
+        $request->session()->put('user_email', $request->email);
+
+        // Los nuevos usuarios siempre van al dashboard normal
+        return redirect()->route('dashboard')->with('success', 'Registro exitoso');
     }
 
     // Logout
     public function logout(Request $request)
     {
         Auth::logout();
-        // Limpiar datos personalizados de la sesión
-        $request->session()->forget('user_email');
-        return redirect('/')->with('success', 'Sesión cerrada');
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('home')->with('success', 'Sesión cerrada correctamente');
+    }
+
+    /**
+     * Redirige al usuario según su rol (basado en email)
+     */
+    private function redirectByRole()
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('home');
+        }
+
+        // Verificación directa por email (más confiable)
+        $email = $user->email;
+
+        // Admin
+        if ($email === 'admin@test.com') {
+            return redirect()->route('admin.dashboard');
+        }
+
+        // Manager
+        if ($email === 'manager@test.com') {
+            return redirect()->route('dashboard');
+        }
+
+        // Usuario normal
+        return redirect()->route('dashboard');
+    }
+
+    /**
+     * Verificar si el usuario es admin (método estático)
+     */
+    public static function isUserAdmin($user = null)
+    {
+        if (!$user) {
+            $user = Auth::user();
+        }
+
+        if (!$user) {
+            return false;
+        }
+
+        return $user->email === 'admin@test.com';
+    }
+
+    /**
+     * Verificar si el usuario es manager (método estático)
+     */
+    public static function isUserManager($user = null)
+    {
+        if (!$user) {
+            $user = Auth::user();
+        }
+
+        if (!$user) {
+            return false;
+        }
+
+        return in_array($user->email, ['admin@test.com', 'manager@test.com']);
+    }
+
+    /**
+     * Método para cambiar manualmente entre dashboards (opcional)
+     */
+    public function switchDashboard(Request $request)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('home');
+        }
+
+        // Verificación directa por email
+        if ($user->email !== 'admin@test.com') {
+            return redirect()->route('dashboard')->with('error', 'No tienes permisos para acceder al panel de administración.');
+        }
+
+        $type = $request->get('type', 'normal');
+
+        if ($type === 'admin') {
+            return redirect()->route('admin.dashboard');
+        } else {
+            return redirect()->route('dashboard');
+        }
     }
 }

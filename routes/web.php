@@ -27,6 +27,7 @@ use App\Http\Controllers\ImageController;
 use App\Http\Controllers\ProductInventoryController;
 use App\Http\Controllers\ProviderDetailController;
 use App\Http\Controllers\OrderDetailController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // ==========================================
@@ -68,6 +69,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::post('/logout', [AuthController::class, 'logout']);
 
 // ==========================================
 // RUTAS PROTEGIDAS POR AUTENTICACIÓN
@@ -75,10 +77,18 @@ Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
 
-    // Dashboard general
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    // Dashboard general (ÚNICO dashboard route)
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+
+    // ==========================================
+    // RUTAS DE PERFIL DE USUARIO
+    // ==========================================
+
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // ==========================================
     // RUTAS DE USUARIO NORMAL
@@ -135,8 +145,8 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('role:admin')->group(function () {
 
-        // Dashboard de administrador
-        Route::get('/admin/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
+        // Dashboard de administrador específico
+        Route::get('/admin/dashboard', [AdminController::class, 'adminDashboard'])->name('admin.dashboard');
         Route::get('/admin/estadisticas', [AdminController::class, 'statistics'])->name('admin.statistics');
         Route::get('/admin/reportes', [AdminController::class, 'reports'])->name('admin.reports');
 
@@ -170,10 +180,6 @@ Route::middleware('auth')->group(function () {
         Route::resource('reviews', ReviewController::class);
         Route::resource('favorites', FavoriteController::class);
         Route::resource('cart-items', CartItemController::class);
-
-
-        //hshshshshshshss
-        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
 
         // ==========================================
         // RUTAS AJAX PARA ADMINISTRADOR
